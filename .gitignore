@@ -5,4 +5,4 @@
 .vscode/ipch
 /venv
 /logs
-.vscode
+/.vscode
