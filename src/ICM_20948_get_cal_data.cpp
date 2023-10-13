@@ -1,4 +1,5 @@
 /*
+a.k.a ICM_20948_get_cal_data.ino
 SENSOR CALIBRATION
 Gyro, magnetometer and accelerometer calibration is required, 
 for each sensor individually. The Arduino program ICM_20948_get_cal_data.ino 
