@@ -32,8 +32,8 @@ mag_df = pd.DataFrame(mag_data, columns=['x', 'y', 'z'])
 #print how many rows and columns in each dataframe
 print(acc_df.shape, mag_df.shape)
 # Save the DataFrames to CSV files
-acc_csv_path = 'accelerometer_data.csv'
-mag_csv_path = 'magnetometer_data.csv'
+acc_csv_path = 'accel_raw.csv'
+mag_csv_path = 'mag3_raw.csv'
 
 acc_df.to_csv(acc_csv_path, header=False, index=False)
 mag_df.to_csv(mag_csv_path, header=False, index=False)
