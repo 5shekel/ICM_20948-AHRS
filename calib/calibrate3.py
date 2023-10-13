@@ -2,36 +2,35 @@ import numpy as np
 from scipy import linalg
 from matplotlib import pyplot as plt
 
- #https://github.com/nliaudat/magnetometer_calibration/blob/main/calibrate.py
- #corrected code S. James Remington, see issue #1 in above contribution.
- #required data input file: x,y,z values in .csv (text, comma separated value) format.
- # see example mag3_raw.csv, .out
- 
-class Magnetometer(object):
-    
+# https://github.com/nliaudat/magnetometer_calibration/blob/main/calibrate.py
+# corrected code S. James Remington, see issue #1 in above contribution.
+# required data input file: x,y,z values in .csv (text, comma separated value) format.
+# see example mag3_raw.csv, .out
+
+
+class Magnetometer(object): 
     '''
      references :
         -  https://teslabs.com/articles/magnetometer-calibration/      
         -  https://www.best-microcontroller-projects.com/hmc5883l.html
 
     '''
-    MField = 1000  #arbitrary norm of magnetic field vectors
+    MField = 1000  # arbitrary norm of magnetic field vectors
 
     def __init__(self, F=MField): 
 
-
         # initialize values
-        self.F   = F
-        self.b   = np.zeros([3, 1])
+        self.F = F
+        self.b = np.zeros([3, 1])
         self.A_1 = np.eye(3)
-        
+
     def run(self):
 
-        data = np.loadtxt("mag3_raw.csv",delimiter=',')
-        print("shape of data array:",data.shape)
-        #print("datatype of data:",data.dtype)
+        data = np.loadtxt("mag3_raw.csv", delimiter=',')
+        print("shape of data array:", data.shape)
+        # print("datatype of data:",data.dtype)
         print("First 5 rows raw:\n", data[:5])
-        
+
         # ellipsoid fit
         s = np.array(data).T
         M, n, d = self.__ellipsoid_fit(s)
@@ -40,61 +39,58 @@ class Magnetometer(object):
         M_1 = linalg.inv(M)
         self.b = -np.dot(M_1, n)
         self.A_1 = np.real(self.F / np.sqrt(np.dot(n.T, np.dot(M_1, n)) - d) * linalg.sqrtm(M))
-        
-        #print("M:\n", M, "\nn:\n", n, "\nd:\n", d)        
-        #print("M_1:\n",M_1, "\nb:\n", self.b, "\nA_1:\n", self.A_1)
-        
-        print("\nData normalized to ",self.F)        
-        print("Soft iron transformation matrix:\n",self.A_1)
+
+        # print("M:\n", M, "\nn:\n", n, "\nd:\n", d)        
+        # print("M_1:\n",M_1, "\nb:\n", self.b, "\nA_1:\n", self.A_1)
+
+        print("\nData normalized to ", self.F)        
+        print("Soft iron transformation matrix:\n", self.A_1)
         print("Hard iron bias:\n", self.b)
 
         plt.rcParams["figure.autolayout"] = True
-        #fig = plt.figure()
-        #ax = fig.add_subplot(111, projection='3d')
-        #ax.scatter(data[:,0], data[:,1], data[:,2], marker='o', color='r')
-		#plt.show()
+        # fig = plt.figure()
+        # ax = fig.add_subplot(111, projection='3d')
+        # ax.scatter(data[:,0], data[:,1], data[:,2], marker='o', color='r')
+        # plt.show()
 
         result = [] 
-        for row in data: 
-        
+        for row in data:
             # subtract the hard iron offset
-            xm_off  = row[0]-self.b[0]
-            ym_off  = row[1]-self.b[1]
-            zm_off  = row[2]-self.b[2]
-            
-            #multiply by the inverse soft iron offset
-            xm_cal = xm_off *  self.A_1[0,0] + ym_off *  self.A_1[0,1]  + zm_off *  self.A_1[0,2] 
-            ym_cal = xm_off *  self.A_1[1,0] + ym_off *  self.A_1[1,1]  + zm_off *  self.A_1[1,2] 
-            zm_cal = xm_off *  self.A_1[2,0] + ym_off *  self.A_1[2,1]  + zm_off *  self.A_1[2,2] 
+            xm_off = row[0]-self.b[0]
+            ym_off = row[1]-self.b[1]
+            zm_off = row[2]-self.b[2]
 
-            result = np.append(result, np.array([xm_cal, ym_cal, zm_cal]) )#, axis=0 )
+            # multiply by the inverse soft iron offset
+            xm_cal = xm_off * self.A_1[0, 0] + ym_off * self.A_1[0, 1] + zm_off * self.A_1[0, 2] 
+            ym_cal = xm_off * self.A_1[1, 0] + ym_off * self.A_1[1, 1] + zm_off * self.A_1[1, 2] 
+            zm_cal = xm_off * self.A_1[2, 0] + ym_off * self.A_1[2, 1] + zm_off * self.A_1[2, 2] 
+
+            result = np.append(result, np.array([xm_cal, ym_cal, zm_cal]))  # , axis=0 )
 
         result = result.reshape(-1, 3)
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(result[:,0], result[:,1], result[:,2], marker='o', color='g')
+        ax.scatter(result[:, 0], result[:, 1], result[:, 2], marker='o', color='g')
         plt.show()
-        
+
         print("First 5 rows calibrated:\n", result[:5])
-		
-        #save corrected data to file "out.txt"
+
+        # save corrected data to file "out.txt"
         np.savetxt('out.txt', result, fmt='%f', delimiter=' ,')
 
-        print("*************************" )        
-        print("code to paste : " )
-        print("*************************" )
-        self.b = np.round(self.b,2)
-        print("float B[3] = {", self.b[0],",", self.b[1],",", self.b[2],"};")
+        print("*************************")     
+        print("code to paste : ")
+        print("*************************")
+        self.b = np.round(self.b, 2)
+        print("float B[3] = {", self.b[0], ",", self.b[1], ",", self.b[2], "};")
         print("\n")
         
-        self.A_1 = np.round(self.A_1,5)
+        self.A_1 = np.round(self.A_1, 5)
         print("float A_inv[3][3] = {")
-        print("{", self.A_1[0,0],",", self.A_1[0,1],",", self.A_1[0,2], "},")
-        print("{", self.A_1[1,0],",", self.A_1[1,1],",", self.A_1[2,1], "},")
-        print("{", self.A_1[2,0],",", self.A_1[2,1],",", self.A_1[2,2], "}};")
+        print("{", self.A_1[0, 0], ",", self.A_1[0, 1], ",", self.A_1[0, 2], "},")
+        print("{", self.A_1[1, 0], ",", self.A_1[1, 1], ",", self.A_1[2, 1], "},")
+        print("{", self.A_1[2, 0], ",", self.A_1[2, 1], ",", self.A_1[2, 2], "}};")
         print("\n")
-
-
 
     def __ellipsoid_fit(self, s):
         ''' Estimate ellipsoid parameters from a set of points.
@@ -123,18 +119,18 @@ class Magnetometer(object):
 
         # S, S_11, S_12, S_21, S_22 (eq. 11)
         S = np.dot(D, D.T)
-        S_11 = S[:6,:6]
-        S_12 = S[:6,6:]
-        S_21 = S[6:,:6]
-        S_22 = S[6:,6:]
+        S_11 = S[:6, :6]
+        S_12 = S[:6, 6:]
+        S_21 = S[6:, :6]
+        S_22 = S[6:, 6:]
 
         # C (Eq. 8, k=4)
         C = np.array([[-1,  1,  1,  0,  0,  0],
-                      [ 1, -1,  1,  0,  0,  0],
-                      [ 1,  1, -1,  0,  0,  0],
-                      [ 0,  0,  0, -4,  0,  0],
-                      [ 0,  0,  0,  0, -4,  0],
-                      [ 0,  0,  0,  0,  0, -4]])
+                      [1, -1,  1,  0,  0,  0],
+                      [1,  1, -1,  0,  0,  0],
+                      [0,  0,  0, -4,  0,  0],
+                      [0,  0,  0,  0, -4,  0],
+                      [0,  0,  0,  0,  0, -4]])
 
         # v_1 (eq. 15, solution)
         E = np.dot(linalg.inv(C),
@@ -158,8 +154,7 @@ class Magnetometer(object):
         d = v_2[3]
 
         return M, n, d
-        
-        
-        
-if __name__=='__main__':
-        Magnetometer().run()
+
+
+if __name__ == '__main__':
+    Magnetometer().run()
