@@ -7,7 +7,8 @@ import re
 import pandas as pd
 
 # Regular expression pattern for extracting accelerometer and magnetometer data
-pattern = re.compile(r"RAW\. Acc \[ (-?\d+),\s+(-?\d+),\s+(-?\d+) \],.*Mag \[ (-?\d+),\s+(-?\d+),\s+(-?\d+) \]")
+pattern = re.compile(r"RAW\. Acc \[\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\],.*Mag \[\s*(-?\d+),\s*(-?\d+),\s*(-?\d+)\s*\]")
+
 
 # Initialize empty lists to hold the extracted data
 acc_data = []
@@ -23,15 +24,18 @@ with open(log_file_path, 'r') as f:
             acc_data.append([acc_x, acc_y, acc_z])
             mag_data.append([mag_x, mag_y, mag_z])
 
-# Create DataFrames from the lists
+# Create DataFrames from the lists with no header and no index
 acc_df = pd.DataFrame(acc_data, columns=['x', 'y', 'z'])
 mag_df = pd.DataFrame(mag_data, columns=['x', 'y', 'z'])
 
+
+#print how many rows and columns in each dataframe
+print(acc_df.shape, mag_df.shape)
 # Save the DataFrames to CSV files
 acc_csv_path = 'accelerometer_data.csv'
 mag_csv_path = 'magnetometer_data.csv'
 
-acc_df.to_csv(acc_csv_path, index=False)
-mag_df.to_csv(mag_csv_path, index=False)
+acc_df.to_csv(acc_csv_path, header=False, index=False)
+mag_df.to_csv(mag_csv_path, header=False, index=False)
 
 acc_csv_path, mag_csv_path
